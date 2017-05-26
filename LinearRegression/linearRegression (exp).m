@@ -1,4 +1,5 @@
 #!/usr/bin/octave -qf
+
 arg_list = argv ();
 data = load('data.txt');
 y_axis = load('y_axis.txt');
@@ -10,8 +11,8 @@ max_elements = [];
 
 % Feature Scaling
 for i = 2:size(data)(2)
+	data(:,i) = data(:,i) .^ (i - 1);
 	max_elements(end + 1) = max(data(:,i));
-	theta(i:1) = theta(i,1) / max(data(:,i));
 	data(:,i) = data(:,i) / max(data(:,i));
 end
 
@@ -30,15 +31,16 @@ end
 
 % Scaling theta results
 for i = 2:size(data)(2)
-	theta(i,1) = theta(i,1) / max_elements(i - 1);
+	theta(i,1) = int8(theta(i,1) / max_elements(i - 1));
 	data(:,i) = data(:,i) * max_elements(i - 1);
 end
-	range = 0:1:it;
-	hold on;
-	plot(range,sum_distance);
-	xlabel('Iterations');
-	ylabel('Distance');
-	title('Machine Learning');
-	print -djpg image.jpg;
+
+%	range = 0:1:it;
+%	hold on;
+%	plot(range,sum_distance);
+%	xlabel('Iterations');
+%	ylabel('Distance');
+%	title('Machine Learning');
+%	print -djpg image.jpg;
 	sum_distance(end)
 	theta
