@@ -3,7 +3,7 @@ import theano
 import theano.tensor as T
 import numpy
 import cPickle
-
+import matplotlib.pyplot as plt
 
 class LogisticRegression(object):
 	
@@ -81,7 +81,7 @@ def load_data(data_set):
 
 
 
-def gradientDescent(dataset,lr = 0.1,n_epoch = 1000,batch_size = 600):
+def gradientDescent(dataset,lr = 0.1,n_epoch = 100,batch_size = 600):
 	
 	datasets = load_data(dataset)
 	train_set_x , train_set_y = datasets[0]
@@ -145,12 +145,14 @@ def gradientDescent(dataset,lr = 0.1,n_epoch = 1000,batch_size = 600):
 	patience = 5000
 	validation_frequency = patience // 2
 	best_validation_loss = numpy.inf
+	train_costs = []
+	validate_costs = []
 	while epoch < n_epoch :
 		epoch = epoch + 1
 		minibatch_avg_cost = 0
 		for minibatch_index in range(n_train_batches):
 			minibatch_avg_cost += train_model(minibatch_index)
-			iteration = (epoch - 1) *  n_train_batches + minbatch_index
+			iteration = (epoch - 1) *  n_train_batches + minibatch_index
 			if iteration % validation_frequency == 0:
 				validation_loss = [validate_model(i) for i in range(n_valid_batches)]
 				this_validation_loss = numpy.mean(validation_loss)
@@ -160,12 +162,48 @@ def gradientDescent(dataset,lr = 0.1,n_epoch = 1000,batch_size = 600):
 					best_validation_loss = this_validation_loss
 	
 				with open('best_model.pkl','wb') as f:
-					pickle.dump(classifier,f)
+					cPickle.dump(classifier,f)
 	
 		if epoch % 100 == 0:
 			test_loss = [test_model(i) for i in range(n_test_batches)]
 			this_test_loss = numpy.mean(test_loss)
 	
+	
+		train_costs.append(minibatch_avg_cost / n_train_batches)
+		
+	return train_costs
 
+
+
+
+
+
+
+def loadTrainedModel():
+	classifier = cPickle.load(open('best_model.pkl'))
+	
+	predict = theano.function(
+					inputs = [classifier.input],
+					outputs = classifier.y_pred
+				 )
+	
+	data_set = load_data('mnist.pkl')
+	test_x,test_y = data_set[2]
+	test_x = test_x.get_value()
+	predicted_values = predict(test_x[:10])
+	print "Predicting some elements ...."
+	for i in range(len(predicted_values)):
+		print "Predicted: " + str(predicted_values[i]) + "  Ground Truth: " + str(test_y[i].eval())
+
+
+def plot_learning_process(train_costs):
+	plt.plot(range(len(train_costs)),train_costs)
+	plt.xlabel('Epoch')
+	plt.ylabel('Cost')
+	plt.title('Machine Learning by Logistic Regression')
+	plt.show()
+	
 if __name__ == "__main__":
-	gradientDescent(sys.argv[1])
+	train_costs = gradientDescent(sys.argv[1])
+	loadTrainedModel()
+	plot_learning_process(train_costs)
